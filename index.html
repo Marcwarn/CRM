@@ -1772,58 +1772,78 @@
 
         // Parse CSV and map to our data structure
         function parseCSV(csv) {
-            // Detect delimiter (comma or semicolon)
-            const allLines = csv.split('\n');
-            
-            // Find header row (skip title rows like "Säljpipe")
-            let headerIndex = 0;
-            for (let i = 0; i < Math.min(5, allLines.length); i++) {
-                const line = allLines[i].toLowerCase();
-                if (line.includes('kund') || line.includes('stage') || line.includes('company')) {
-                    headerIndex = i;
-                    break;
-                }
-            }
-            
-            const lines = allLines.slice(headerIndex).filter(line => line.trim());
-            if (lines.length < 2) {
-                console.error('No data rows found after header');
-                return [];
-            }
-            
-            const firstLine = lines[0];
-            const delimiter = firstLine.includes(';') ? ';' : ',';
-            
-            // Parse header
-            const header = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
-            
-            console.log('CSV Header:', header);
-            console.log('Using delimiter:', delimiter);
-            console.log('Header found at line:', headerIndex + 1);
-            
-            // Map column names to our fields (case-insensitive)
-            const columnMap = {};
-            header.forEach((col, index) => {
-                const normalized = col.toLowerCase().trim();
+            try {
+                // Clean the CSV - remove BOM and normalize line endings
+                csv = csv.replace(/^\uFEFF/, ''); // Remove BOM
+                csv = csv.replace(/\r\n/g, '\n').replace(/\r/g, '\n'); // Normalize line endings
                 
-                // Company
-                if (normalized.includes('kund') || normalized === 'company' || normalized === 'företag') {
-                    columnMap[index] = 'company';
+                const allLines = csv.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                
+                if (allLines.length < 2) {
+                    console.error('CSV file is empty or has only one line');
+                    alert('CSV-filen verkar vara tom eller saknar data. Kontrollera att filen innehåller både header och minst en rad med data.');
+                    return [];
                 }
-                // Value - check for "Intäkt" column or numeric column names
-                else if (normalized === 'intäkt' || normalized.includes('intäkt') || 
-                         normalized === 'value' || normalized === 'värde' || 
-                         normalized === 'deal-värde' || /^\d{5,}$/.test(normalized)) {
-                    columnMap[index] = 'value';
+                
+                console.log('Total lines in CSV:', allLines.length);
+                console.log('First 3 lines:', allLines.slice(0, 3));
+                
+                // Detect delimiter - check multiple lines, not just first
+                let delimiter = ',';
+                for (let i = 0; i < Math.min(3, allLines.length); i++) {
+                    if (allLines[i].includes(';')) {
+                        delimiter = ';';
+                        break;
+                    }
                 }
-                // Confidence/Maturity level - single digit numbers (1, 2, 3)
-                else if (/^[123]$/.test(normalized)) {
-                    columnMap[index] = 'confidence';
+                console.log('Detected delimiter:', delimiter);
+                
+                // Find header row - look for row with "Kund", "Stage", or "Company"
+                let headerIndex = -1;
+                for (let i = 0; i < Math.min(5, allLines.length); i++) {
+                    const line = allLines[i].toLowerCase();
+                    if (line.includes('kund') || line.includes('stage') || line.includes('company') || line.includes('intäkt')) {
+                        headerIndex = i;
+                        console.log('Found header at line:', i + 1);
+                        break;
+                    }
                 }
-                // Stage
-                else if (normalized === 'stage' || normalized.includes('steg')) {
-                    columnMap[index] = 'stage';
+                
+                if (headerIndex === -1) {
+                    console.error('Could not find header row');
+                    console.log('Searched first 5 lines:', allLines.slice(0, 5));
+                    alert('Kunde inte hitta header-rad med "Kund", "Stage" eller "Intäkt".\n\nKontrollera att CSV-filen har dessa kolumner.');
+                    return [];
                 }
+                
+                const lines = allLines.slice(headerIndex);
+                const header = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
+                
+                console.log('Header columns:', header);
+                
+                // Map column names to our fields
+                const columnMap = {};
+                header.forEach((col, index) => {
+                    const normalized = col.toLowerCase().trim();
+                    
+                    if (normalized.includes('kund') || normalized === 'company' || normalized === 'företag') {
+                        columnMap[index] = 'company';
+                        console.log('Column', index, '('+col+') mapped to: company');
+                    }
+                    else if (normalized === 'intäkt' || normalized.includes('intäkt') || 
+                             normalized === 'value' || normalized === 'värde' || 
+                             normalized === 'deal-värde' || /^\d{5,}$/.test(normalized)) {
+                        columnMap[index] = 'value';
+                        console.log('Column', index, '('+col+') mapped to: value');
+                    }
+                    else if (/^[123]$/.test(normalized) || normalized === '2') {
+                        columnMap[index] = 'confidence';
+                        console.log('Column', index, '('+col+') mapped to: confidence');
+                    }
+                    else if (normalized === 'stage' || normalized.includes('steg')) {
+                        columnMap[index] = 'stage';
+                        console.log('Column', index, '('+col+') mapped to: stage');
+                    }
                 // Service
                 else if (normalized.includes('uppdrag') || normalized === 'service' || normalized === 'typ av uppdrag') {
                     columnMap[index] = 'service';
@@ -1894,38 +1914,13 @@
                     if (mappedField === 'company') {
                         deal.company = value;
                     } else if (mappedField === 'value') {
-                        // Parse value - handle various formats
-                        // "2-3 mkr" → take first number = 2 000 000
-                        // "10 000" → 10 000
-                        // "180 000" → 180 000
-                        // "100-300 000" → 100 000 (take lowest in range)
-                        // "720 000 under 8 mån" → 720 000 (ignore text after number)
-                        
-                        let cleanValue = value.toLowerCase();
-                        let numValue = 0;
-                        
-                        // Check for range pattern (e.g. "100-300", "2-3 mkr")
-                        const rangeMatch = cleanValue.match(/(\d+)\s*-\s*(\d+)/);
-                        if (rangeMatch) {
-                            // Take the first (lowest) number in range
-                            numValue = parseInt(rangeMatch[1]);
-                        } else {
-                            // Extract first number with spaces (e.g. "180 000" or "720 000 under...")
-                            const numberMatch = cleanValue.match(/(\d+(?:\s+\d+)*)/);
-                            if (numberMatch) {
-                                numValue = parseInt(numberMatch[1].replace(/\s/g, ''));
-                            }
-                        }
-                        
-                        if (numValue > 0) {
-                            // Check for multipliers
-                            if (cleanValue.includes('mkr') || cleanValue.includes('miljon')) {
-                                numValue = numValue * 1000000;
-                            } else if (cleanValue.includes('k') && !cleanValue.includes('kr')) {
-                                numValue = numValue * 1000;
-                            }
-                            
-                            deal.value = numValue;
+                        // ENDAST läs ren siffra från Intäkt-kolumnen
+                        // Exempel: "2000000" → 2000000
+                        //          "180000" → 180000
+                        //          "" → 0
+                        const numStr = value.replace(/[^0-9]/g, '');
+                        if (numStr) {
+                            deal.value = parseInt(numStr);
                         }
                     } else if (mappedField === 'stage') {
                         deal.stage = value;
@@ -1964,12 +1959,18 @@
                 // Only add if we have at least company
                 if (deal.company) {
                     deals.push(deal);
+                    console.log('Added deal:', deal.company, '=', deal.value, 'kr');
+                } else {
+                    console.log('Skipped row (no company):', line.substring(0, 50));
                 }
             }
             
             console.log('Parsed deals:', deals.length);
             if (deals.length > 0) {
                 console.log('First deal:', deals[0]);
+                console.log('Total value:', deals.reduce((sum, d) => sum + d.value, 0), 'kr');
+            } else {
+                alert('Kunde inte hitta några deals i CSV-filen.\n\nDebug info i console (tryck F12)');
             }
             return deals;
         }
