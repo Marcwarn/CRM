@@ -216,49 +216,24 @@
             font-weight: 600;
         }
 
-        .badge.stage-cold {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        .badge.stage-warm {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge.stage-contact {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .badge.stage-meeting {
-            background: #e0e7ff;
-            color: #3730a3;
-        }
-
-        .badge.stage-needs {
-            background: #e0e7ff;
-            color: #5b21b6;
-        }
-
-        .badge.stage-offer {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge.stage-negotiation {
-            background: #fed7aa;
-            color: #9a3412;
-        }
-
-        .badge.stage-ongoing {
+        .badge.stage-tut {
             background: #dcfce7;
             color: #166534;
         }
 
-        .badge.stage-won {
-            background: #bbf7d0;
-            color: #14532d;
+        .badge.stage-sharp {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.stage-talk {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge.stage-offer {
+            background: #e0e7ff;
+            color: #3730a3;
         }
 
         .badge.stage-lost {
@@ -499,8 +474,8 @@
                         Saknar värde
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="filter-missing-kam" onchange="applyFilters()">
-                        Saknar KAM
+                        <input type="checkbox" id="filter-missing-problem" onchange="applyFilters()">
+                        Saknar problem/behov
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px;">
                         <input type="checkbox" id="filter-incomplete" onchange="applyFilters()">
@@ -516,28 +491,38 @@
                     <select id="filter-owner" onchange="applyFilters()" style="margin-left: 10px; padding: 8px;">
                         <option value="">Alla</option>
                     </select>
-                    <label style="margin-left: 20px;">Filtrera på stage:</label>
-                    <select id="filter-stage" onchange="applyFilters()" style="margin-left: 10px; padding: 8px;">
-                        <option value="">Alla</option>
-                        <option value="Prospekt - Kall">Prospekt - Kall</option>
-                        <option value="Prospekt - Varm">Prospekt - Varm</option>
-                        <option value="Första kontakt">Första kontakt</option>
-                        <option value="Möte bokat">Möte bokat</option>
-                        <option value="Behovskartläggning">Behovskartläggning</option>
-                        <option value="Offert">Offert</option>
-                        <option value="Förhandling">Förhandling</option>
-                        <option value="Pågående uppdrag">Pågående uppdrag</option>
-                        <option value="Vunnen">Vunnen</option>
-                        <option value="Förlorad">Förlorad</option>
-                    </select>
                     <button class="secondary-btn" onclick="clearFilters()" style="margin-left: 10px;">Rensa filter</button>
                 </div>
             </div>
 
-            <!-- ALLA DEALS -->
+            <!-- PIPELINE PER STAGE -->
             <div class="section">
-                <h2>Alla Deals</h2>
-                <div id="all-deals" class="deal-list"></div>
+                <h2>Pipeline per Stage</h2>
+                
+                <div class="stage-section">
+                    <h3>Tut! (Nästan klart)</h3>
+                    <div id="stage-tut" class="deal-list"></div>
+                </div>
+
+                <div class="stage-section">
+                    <h3>Skarpt läge</h3>
+                    <div id="stage-sharp" class="deal-list"></div>
+                </div>
+
+                <div class="stage-section">
+                    <h3>Skriver/skickat offert</h3>
+                    <div id="stage-offer" class="deal-list"></div>
+                </div>
+
+                <div class="stage-section">
+                    <h3>Kundsnack</h3>
+                    <div id="stage-talk" class="deal-list"></div>
+                </div>
+
+                <div class="stage-section">
+                    <h3>Tappat uppdrag</h3>
+                    <div id="stage-lost" class="deal-list"></div>
+                </div>
             </div>
         </div>
 
@@ -742,16 +727,11 @@
                             <label>Stage *</label>
                             <select id="stage" required>
                                 <option value="">Välj stage...</option>
-                                <option value="Prospekt - Kall">Prospekt - Kall</option>
-                                <option value="Prospekt - Varm">Prospekt - Varm</option>
-                                <option value="Första kontakt">Första kontakt</option>
-                                <option value="Möte bokat">Möte bokat</option>
-                                <option value="Behovskartläggning">Behovskartläggning</option>
-                                <option value="Offert">Offert</option>
-                                <option value="Förhandling">Förhandling</option>
-                                <option value="Pågående uppdrag">Pågående uppdrag</option>
-                                <option value="Vunnen">Vunnen</option>
-                                <option value="Förlorad">Förlorad</option>
+                                <option value="Tut!">Tut!</option>
+                                <option value="Skarpt läge">Skarpt läge</option>
+                                <option value="Skriver/skickat offert">Skriver/skickat offert</option>
+                                <option value="Kundsnack">Kundsnack</option>
+                                <option value="Tappat uppdrag">Tappat uppdrag</option>
                             </select>
                         </div>
                         <div>
@@ -772,7 +752,7 @@
                         </div>
                         <div>
                             <label>KAM (Key Account Manager)</label>
-                            <input type="text" id="kam" placeholder="Vem är ansvarig för relationen långsiktigt?">
+                            <input type="text" id="kam" placeholder="Långsiktig kundansvarig">
                         </div>
                     </div>
 
@@ -781,15 +761,9 @@
                             <label>Typ av Uppdrag</label>
                             <input type="text" id="service" placeholder="t.ex. Ledarutveckling, OneBrand, Coaching">
                         </div>
-                        <div>
-                            <label>Kundtyp</label>
-                            <select id="customer-type">
-                                <option value="">Välj...</option>
-                                <option value="Enterprise">Enterprise (stor kund)</option>
-                                <option value="Mid-market">Mid-market (mellanstora)</option>
-                                <option value="SMB">SMB (små företag)</option>
-                                <option value="Okänd">Okänd</option>
-                            </select>
+                        <div style="opacity: 0; pointer-events: none;">
+                            <label>-</label>
+                            <input type="text" disabled>
                         </div>
                     </div>
 
@@ -1139,7 +1113,6 @@
                 confidence: confidenceValue ? parseInt(confidenceValue) : null,
                 owner: document.getElementById('owner').value,
                 kam: document.getElementById('kam').value,
-                customerType: document.getElementById('customer-type').value,
                 service: document.getElementById('service').value,
                 contact: document.getElementById('contact').value,
                 existingCustomer: document.getElementById('existing-customer').checked,
@@ -1257,23 +1230,18 @@
         // Get stage badge class
         function getStageBadgeClass(stage) {
             const map = {
-                'Prospekt - Kall': 'stage-cold',
-                'Prospekt - Varm': 'stage-warm',
-                'Första kontakt': 'stage-contact',
-                'Möte bokat': 'stage-meeting',
-                'Behovskartläggning': 'stage-needs',
-                'Offert': 'stage-offer',
-                'Förhandling': 'stage-negotiation',
-                'Pågående uppdrag': 'stage-ongoing',
-                'Vunnen': 'stage-won',
-                'Förlorad': 'stage-lost'
+                'Tut!': 'stage-tut',
+                'Skarpt läge': 'stage-sharp',
+                'Kundsnack': 'stage-talk',
+                'Skriver/skickat offert': 'stage-offer',
+                'Tappat uppdrag': 'stage-lost'
             };
             return map[stage] || 'stage-talk';
         }
 
         // Calculate data quality for a deal
         function calculateDataQuality(deal) {
-            const requiredFields = [
+            const fields = [
                 deal.company,
                 deal.value > 0,
                 deal.stage,
@@ -1281,39 +1249,29 @@
                 deal.service,
                 deal.contact,
                 deal.nextStep,
-                deal.problem
+                deal.problem,
+                deal.comment
             ];
             
-            // KAM är required för befintliga kunder och Pågående uppdrag
-            if (deal.existingCustomer || deal.stage === 'Pågående uppdrag') {
-                requiredFields.push(deal.kam);
-            }
-            
-            const filled = requiredFields.filter(f => f && String(f).trim()).length;
-            const percentage = Math.round((filled / requiredFields.length) * 100);
-            
-            const missing = []
-                .concat(!deal.contact ? ['Kontaktperson'] : [])
-                .concat(!deal.nextStep ? ['Nästa steg'] : [])
-                .concat(!deal.value || deal.value === 0 ? ['Värde'] : [])
-                .concat(!deal.problem ? ['Problem/behov'] : [])
-                .concat(!deal.service ? ['Service'] : []);
-            
-            if ((deal.existingCustomer || deal.stage === 'Pågående uppdrag') && !deal.kam) {
-                missing.push('KAM');
-            }
+            const filled = fields.filter(f => f && String(f).trim()).length;
+            const percentage = Math.round((filled / fields.length) * 100);
             
             return {
                 percentage: percentage,
-                missing: missing
+                missing: []
+                    .concat(!deal.contact ? ['Kontaktperson'] : [])
+                    .concat(!deal.nextStep ? ['Nästa steg'] : [])
+                    .concat(!deal.value || deal.value === 0 ? ['Värde'] : [])
+                    .concat(!deal.problem ? ['Problem/behov'] : [])
+                    .concat(!deal.service ? ['Service'] : [])
             };
         }
 
         // Render deal card
         function renderDealCard(deal) {
             const days = daysSince(deal.lastActivity);
-            const isStale = days > 21;
-            const isHot = deal.stage === 'Offert' || deal.stage === 'Förhandling' || deal.stage === 'Pågående uppdrag';
+            const isStale = days > 30;
+            const isHot = deal.stage === 'Tut!' || deal.stage === 'Skarpt läge';
             
             const quality = calculateDataQuality(deal);
             
@@ -1354,22 +1312,6 @@
                 </div>`;
             }
             
-            // AI Insights rendering
-            let aiInsightsHtml = '';
-            if (aiInsights.length > 0) {
-                aiInsightsHtml = `
-                    <div style="margin-top: 10px; padding: 10px; background: #eff6ff; border-radius: 6px;">
-                        <strong>AI Insights:</strong>
-                        ${aiInsights.map(insight => `
-                            <div style="margin-top: 5px; padding: 5px; font-size: 0.9em;">
-                                <strong>${insight.title}</strong><br>
-                                ${insight.text}
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-            
             return `
                 <div class="${cardClass}">
                     ${qualityIndicator}
@@ -1378,13 +1320,11 @@
                             <div class="deal-title">${deal.company}</div>
                             <span class="badge ${getStageBadgeClass(deal.stage)}">${deal.stage}</span>
                             ${confidenceBadge}
-                            ${deal.existingCustomer ? '<span class="badge" style="background: #d1fae5; color: #065f46; margin-left: 8px;">Befintlig kund</span>' : ''}
                         </div>
                         <div class="deal-value">${formatCurrency(deal.value)}</div>
                     </div>
                     <div class="deal-meta">
                         <div class="meta-item">Owner: ${deal.owner}</div>
-                        ${deal.kam ? `<div class="meta-item">KAM: ${deal.kam}</div>` : ''}
                         <div class="meta-item">Service: ${deal.service || '—'}</div>
                         <div class="meta-item">Senaste: ${days} dagar sedan</div>
                         ${deal.contact ? `<div class="meta-item">Kontakt: ${deal.contact}</div>` : ''}
@@ -1407,74 +1347,35 @@
             const days = daysSince(deal.lastActivity);
             const insights = [];
             
-            // KAM missing för aktiva kunder
-            if (!deal.kam && (deal.stage === 'Pågående uppdrag' || deal.stage === 'Offert' || deal.stage === 'Förhandling' || deal.existingCustomer)) {
-                insights.push({
-                    type: 'warning',
-                    title: 'Saknar KAM',
-                    text: 'Tilldela Key Account Manager för långsiktig kundrelation'
-                });
-            }
-            
             // Stale deal warning
-            if (days > 21 && deal.stage !== 'Förlorad' && deal.stage !== 'Vunnen') {
-                insights.push({
-                    type: 'critical',
-                    title: `${days} dagar utan aktivitet`,
-                    text: 'Risk att dealen dör. Boka uppföljningsmöte NU.'
-                });
+            if (days > 60 && deal.stage !== 'Tappat uppdrag') {
+                insights.push(`
+                    <h4>VARNING: Ingen aktivitet</h4>
+                    <p>Ingen aktivitet på ${days} dagar. Deals i ${deal.stage} med >60 dagars inaktivitet har historiskt 80% risk att dö.</p>
+                    <p><strong>Förslag:</strong> Boka uppföljningsmöte NU. Anledning att höra av dig: "Q1 planning" eller "Vill stämma av timeline"</p>
+                `);
             }
             
             // Next step missing
-            if (!deal.nextStep && deal.stage !== 'Förlorad' && deal.stage !== 'Vunnen') {
-                insights.push({
-                    type: 'warning',
-                    title: 'Saknar nästa steg',
-                    text: 'Deals utan tydlig next action stannar ofta av.'
-                });
+            if (!deal.nextStep && deal.stage !== 'Tappat uppdrag') {
+                insights.push(`
+                    <h4>AI Förslag</h4>
+                    <p>Ingen nästa steg planerat. Deals utan tydlig next action stannar ofta av.</p>
+                    <p><strong>Rekommendation:</strong> Boka konkret nästa möte eller aktivitet.</p>
+                `);
             }
             
-            // Offert follow-up
-            if (deal.stage === 'Offert' && days > 7) {
-                insights.push({
-                    type: 'action',
-                    title: 'Offert >7 dagar',
-                    text: 'Följ upp beslut. Fråga: "Vad behöver ni för att gå vidare?"'
-                });
-            }
-            
-            // Behovskartläggning utan värde
-            if (deal.stage === 'Behovskartläggning' && !deal.value) {
-                insights.push({
-                    type: 'action',
-                    title: 'Uppskatta deal-värde',
-                    text: 'Viktigt för att prioritera och allokera resurser rätt.'
-                });
-            }
-            
-            // Kvartalsfas för befintliga kunder
-            if ((deal.stage === 'Pågående uppdrag' || deal.existingCustomer) && deal.created) {
-                const monthsSince = Math.floor(daysSince(deal.created) / 30);
-                if (monthsSince > 0 && monthsSince % 3 === 0) {
-                    insights.push({
-                        type: 'opportunity',
-                        title: 'Q-fas - Merförsäljning',
-                        text: `${monthsSince / 3} kvartal sedan start. Tid att diskutera expansion.`
-                    });
-                }
-            }
-            
-            // Prospekt → Första kontakt tips
-            if (deal.stage === 'Första kontakt' && days < 3) {
-                insights.push({
-                    type: 'tip',
-                    title: 'Nytt prospekt',
-                    text: 'Fokus: Förstå behov, inte sälja. Ställ öppna frågor.'
-                });
-            }
-            
-            return insights;
-        }
+            // Hot deal suggestions
+            if (deal.stage === 'Tut!' || deal.stage === 'Skarpt läge') {
+                insights.push(`
+                    <h4>Hot Deal - Success Tips</h4>
+                    <p>Baserat på liknande deals:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Visa relevanta case från liknande kunder</li>
+                        <li>Föreslå pilot-approach om de tveker</li>
+                        <li>Boka uppföljning inom 5 dagar efter pitch</li>
+                    </ul>
+                `);
             }
             
             return insights.length > 0 ? insights.join('') : null;
@@ -1497,11 +1398,10 @@
                 missingContact: document.getElementById('filter-missing-contact').checked,
                 missingNext: document.getElementById('filter-missing-next').checked,
                 missingValue: document.getElementById('filter-missing-value').checked,
-                missingKam: document.getElementById('filter-missing-kam').checked,
+                missingProblem: document.getElementById('filter-missing-problem').checked,
                 incomplete: document.getElementById('filter-incomplete').checked,
                 complete: document.getElementById('filter-complete').checked,
-                owner: document.getElementById('filter-owner').value,
-                stage: document.getElementById('filter-stage').value
+                owner: document.getElementById('filter-owner').value
             };
             
             updatePipelineView();
@@ -1512,11 +1412,10 @@
             document.getElementById('filter-missing-contact').checked = false;
             document.getElementById('filter-missing-next').checked = false;
             document.getElementById('filter-missing-value').checked = false;
-            document.getElementById('filter-missing-kam').checked = false;
+            document.getElementById('filter-missing-problem').checked = false;
             document.getElementById('filter-incomplete').checked = false;
             document.getElementById('filter-complete').checked = false;
             document.getElementById('filter-owner').value = '';
-            document.getElementById('filter-stage').value = '';
             
             applyFilters();
         }
@@ -1529,18 +1428,13 @@
                     return false;
                 }
                 
-                // Stage filter
-                if (activeFilters.stage && deal.stage !== activeFilters.stage) {
-                    return false;
-                }
-                
                 // Data quality filters
                 const quality = calculateDataQuality(deal);
                 
                 if (activeFilters.missingContact && deal.contact) return false;
                 if (activeFilters.missingNext && deal.nextStep) return false;
                 if (activeFilters.missingValue && deal.value > 0) return false;
-                if (activeFilters.missingKam && deal.kam) return false;
+                if (activeFilters.missingProblem && deal.problem) return false;
                 if (activeFilters.incomplete && quality.percentage >= 50) return false;
                 if (activeFilters.complete && quality.percentage < 80) return false;
                 
@@ -1550,7 +1444,7 @@
 
         // Update Pipeline View (HUVUDVY)
         function updatePipelineView() {
-            const activeDeals = deals.filter(d => d.stage !== 'Förlorad' && d.stage !== 'Vunnen');
+            const activeDeals = deals.filter(d => d.stage !== 'Tappat uppdrag');
             const allDeals = deals;
             
             // Populate owner filter dropdown
@@ -1580,41 +1474,70 @@
             document.getElementById('pipeline-avg-value').textContent = formatCurrency(avgValue);
             document.getElementById('pipeline-data-quality').textContent = avgQuality + '%';
             
-            // Apply filters and render all deals
-            const filteredDeals = filterDeals(allDeals);
-            const allDealsHtml = filteredDeals.length > 0
-                ? filteredDeals.map(renderDealCard).join('')
-                : allDeals.length > 0 
-                    ? '<div class="empty-state"><h3>Inga deals matchar filtret</h3><p>Justera eller rensa filter för att se deals.</p></div>'
-                    : '<div class="empty-state"><h3>Inga deals än</h3><p>Lägg till din första deal!</p></div>';
+            // Group by stage and apply filters
+            const stages = {
+                'Tut!': filterDeals(allDeals.filter(d => d.stage === 'Tut!')),
+                'Skarpt läge': filterDeals(allDeals.filter(d => d.stage === 'Skarpt läge')),
+                'Skriver/skickat offert': filterDeals(allDeals.filter(d => d.stage === 'Skriver/skickat offert')),
+                'Kundsnack': filterDeals(allDeals.filter(d => d.stage === 'Kundsnack')),
+                'Tappat uppdrag': filterDeals(allDeals.filter(d => d.stage === 'Tappat uppdrag'))
+            };
             
-            document.getElementById('all-deals').innerHTML = allDealsHtml;
+            // Render each stage
+            const stageIds = ['tut', 'sharp', 'offer', 'talk', 'lost'];
+            const stageKeys = ['Tut!', 'Skarpt läge', 'Skriver/skickat offert', 'Kundsnack', 'Tappat uppdrag'];
+            
+            stageIds.forEach((id, index) => {
+                const stageDeals = stages[stageKeys[index]];
+                const container = document.getElementById('stage-' + id);
+                
+                if (stageDeals.length === 0) {
+                    const allInStage = allDeals.filter(d => d.stage === stageKeys[index]).length;
+                    if (allInStage > 0 && Object.values(activeFilters).some(v => v)) {
+                        container.innerHTML = '<div class="stage-empty">Inga deals matchar filtret</div>';
+                    } else {
+                        container.innerHTML = '<div class="stage-empty">Inga deals i detta stage</div>';
+                    }
+                } else {
+                    const totalStageValue = stageDeals.reduce((sum, d) => sum + d.value, 0);
+                    const header = `<div style="margin-bottom: 15px; color: #6b7280;">
+                        ${stageDeals.length} deals · ${formatCurrency(totalStageValue)}
+                    </div>`;
+                    container.innerHTML = header + stageDeals.map(renderDealCard).join('');
+                }
+            });
         }
 
         // Update Team View
         function updateTeamView() {
-            const activeDeals = deals.filter(d => d.stage !== 'Förlorad' && d.stage !== 'Vunnen');
-            const hotDeals = activeDeals.filter(d => d.stage === 'Offert' || d.stage === 'Förhandling' || d.stage === 'Pågående uppdrag');
-            const staleDeals = activeDeals.filter(d => daysSince(d.lastActivity) > 21);
+            const activeDeals = deals.filter(d => d.stage !== 'Tappat uppdrag');
+            const hotDeals = activeDeals.filter(d => d.stage === 'Tut!' || d.stage === 'Skarpt läge');
+            const staleDeals = activeDeals.filter(d => daysSince(d.lastActivity) > 30);
             
             const totalValue = activeDeals.reduce((sum, d) => sum + d.value, 0);
             
             document.getElementById('team-total-value').textContent = formatCurrency(totalValue);
             document.getElementById('team-deal-count').textContent = activeDeals.length;
             document.getElementById('team-hot-count').textContent = hotDeals.length;
-            document.getElementById('team-risk-count').textContent = staleDeals.length;
+            document.getElementById('team-stale-count').textContent = staleDeals.length;
             
             // Hot deals
             const hotDealsHtml = hotDeals.length > 0 
                 ? hotDeals.map(renderDealCard).join('')
-                : '<div class="empty-state"><h3>Inga skarpa lägen just nu</h3></div>';
+                : '<div class="empty-state"><h3>Inga heta deals just nu</h3></div>';
             document.getElementById('hot-deals').innerHTML = hotDealsHtml;
             
             // Stale deals
             const staleDealsHtml = staleDeals.length > 0
                 ? staleDeals.map(renderDealCard).join('')
-                : '<div class="empty-state"><h3>Inget står stilla!</h3></div>';
+                : '<div class="empty-state"><h3>Inga risk deals!</h3></div>';
             document.getElementById('stale-deals').innerHTML = staleDealsHtml;
+            
+            // All deals
+            const allDealsHtml = activeDeals.length > 0
+                ? activeDeals.map(renderDealCard).join('')
+                : '<div class="empty-state"><h3>Inga deals än</h3><p>Lägg till din första deal!</p></div>';
+            document.getElementById('all-deals').innerHTML = allDealsHtml;
             
             // Network opportunities (placeholder)
             document.getElementById('network-opportunities').innerHTML = `
