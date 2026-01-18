@@ -216,24 +216,49 @@
             font-weight: 600;
         }
 
-        .badge.stage-tut {
-            background: #dcfce7;
-            color: #166534;
+        .badge.stage-cold {
+            background: #f3f4f6;
+            color: #6b7280;
         }
 
-        .badge.stage-sharp {
+        .badge.stage-warm {
             background: #fef3c7;
             color: #92400e;
         }
 
-        .badge.stage-talk {
+        .badge.stage-contact {
             background: #dbeafe;
             color: #1e40af;
         }
 
-        .badge.stage-offer {
+        .badge.stage-meeting {
             background: #e0e7ff;
             color: #3730a3;
+        }
+
+        .badge.stage-needs {
+            background: #e0e7ff;
+            color: #5b21b6;
+        }
+
+        .badge.stage-offer {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.stage-negotiation {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .badge.stage-ongoing {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge.stage-won {
+            background: #bbf7d0;
+            color: #14532d;
         }
 
         .badge.stage-lost {
@@ -430,6 +455,7 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('pipeline')">Pipeline</button>
             <button class="tab" onclick="showTab('team')">Team</button>
+            <button class="tab" onclick="showTab('kunder')">Kunder</button>
             <button class="tab" onclick="showTab('konsult')">Konsult</button>
             <button class="tab" onclick="showTab('ledning')">Analys</button>
             <button class="tab" onclick="showTab('input')">Lägg till</button>
@@ -473,8 +499,8 @@
                         Saknar värde
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="filter-missing-problem" onchange="applyFilters()">
-                        Saknar problem/behov
+                        <input type="checkbox" id="filter-missing-kam" onchange="applyFilters()">
+                        Saknar KAM
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px;">
                         <input type="checkbox" id="filter-incomplete" onchange="applyFilters()">
@@ -490,38 +516,28 @@
                     <select id="filter-owner" onchange="applyFilters()" style="margin-left: 10px; padding: 8px;">
                         <option value="">Alla</option>
                     </select>
+                    <label style="margin-left: 20px;">Filtrera på stage:</label>
+                    <select id="filter-stage" onchange="applyFilters()" style="margin-left: 10px; padding: 8px;">
+                        <option value="">Alla</option>
+                        <option value="Prospekt - Kall">Prospekt - Kall</option>
+                        <option value="Prospekt - Varm">Prospekt - Varm</option>
+                        <option value="Första kontakt">Första kontakt</option>
+                        <option value="Möte bokat">Möte bokat</option>
+                        <option value="Behovskartläggning">Behovskartläggning</option>
+                        <option value="Offert">Offert</option>
+                        <option value="Förhandling">Förhandling</option>
+                        <option value="Pågående uppdrag">Pågående uppdrag</option>
+                        <option value="Vunnen">Vunnen</option>
+                        <option value="Förlorad">Förlorad</option>
+                    </select>
                     <button class="secondary-btn" onclick="clearFilters()" style="margin-left: 10px;">Rensa filter</button>
                 </div>
             </div>
 
-            <!-- PIPELINE PER STAGE -->
+            <!-- ALLA DEALS -->
             <div class="section">
-                <h2>Pipeline per Stage</h2>
-                
-                <div class="stage-section">
-                    <h3>Tut! (Nästan klart)</h3>
-                    <div id="stage-tut" class="deal-list"></div>
-                </div>
-
-                <div class="stage-section">
-                    <h3>Skarpt läge</h3>
-                    <div id="stage-sharp" class="deal-list"></div>
-                </div>
-
-                <div class="stage-section">
-                    <h3>Skriver/skickat offert</h3>
-                    <div id="stage-offer" class="deal-list"></div>
-                </div>
-
-                <div class="stage-section">
-                    <h3>Kundsnack</h3>
-                    <div id="stage-talk" class="deal-list"></div>
-                </div>
-
-                <div class="stage-section">
-                    <h3>Tappat uppdrag</h3>
-                    <div id="stage-lost" class="deal-list"></div>
-                </div>
+                <h2>Alla Deals</h2>
+                <div id="all-deals" class="deal-list"></div>
             </div>
         </div>
 
@@ -547,23 +563,50 @@
             </div>
 
             <div class="section">
-                <h2>🔥 Heta Deals (Behöver Attention)</h2>
+                <h2>Skarpa lägen just nu</h2>
                 <div id="hot-deals" class="deal-list"></div>
             </div>
 
             <div class="section">
-                <h2>⚠️ Risk Deals (Inget händer)</h2>
+                <h2>Står stilla för länge</h2>
                 <div id="stale-deals" class="deal-list"></div>
             </div>
 
             <div class="section">
-                <h2>💼 Network Opportunities</h2>
+                <h2>Kan vi hjälpa varandra?</h2>
                 <div id="network-opportunities"></div>
             </div>
 
             <div class="section">
-                <h2>📋 Alla Deals</h2>
+                <h2>Alla Deals</h2>
                 <div id="all-deals" class="deal-list"></div>
+            </div>
+        </div>
+
+        <!-- KUNDER VY -->
+        <div id="kunder-view" class="tab-content">
+            <div class="section">
+                <h2>Befintliga Kunder</h2>
+                <p style="color: #6b7280; margin-bottom: 20px;">
+                    Översikt av alla kunder vi redan jobbar med. Historik, omsättning, och vem som är ansvarig.
+                </p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="kunder-total">0</div>
+                        <div class="stat-label">Antal kunder</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="kunder-revenue">0 kr</div>
+                        <div class="stat-label">Total omsättning</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="kunder-avg">0 kr</div>
+                        <div class="stat-label">Snitt per kund</div>
+                    </div>
+                </div>
+
+                <div id="customer-list" style="margin-top: 30px;"></div>
             </div>
         </div>
 
@@ -578,15 +621,15 @@
 
             <div id="konsult-content" class="hidden">
                 <div class="section">
-                    <h2>👋 Hej <span id="konsult-name"></span>!</h2>
+                    <h2> Hej <span id="konsult-name"></span>!</h2>
                     
-                    <h3>🎯 Idag</h3>
+                    <h3> Idag</h3>
                     <ul class="action-list" id="konsult-today"></ul>
 
-                    <h3>💼 Dina Deals</h3>
+                    <h3>Dina Deals</h3>
                     <div id="konsult-deals"></div>
 
-                    <h3>🌐 Ditt Nätverk Kan Hjälpa</h3>
+                    <h3> Ditt Nätverk Kan Hjälpa</h3>
                     <div id="konsult-network"></div>
                 </div>
             </div>
@@ -595,30 +638,30 @@
         <!-- LEDNING VY -->
         <div id="ledning-view" class="tab-content">
             <div class="section">
-                <h2>📈 Strategisk Intelligence</h2>
+                <h2>Översikt</h2>
                 
-                <h3>Pipeline Fördelning</h3>
+                <h3>Siffror</h3>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-value" id="ledning-avg-deal">0 kr</div>
-                        <div class="stat-label">Genomsnittligt Deal-värde</div>
+                        <div class="stat-label">Snitt per deal</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="ledning-cycle-time">0</div>
-                        <div class="stat-label">Genomsnittlig Cycle (dagar)</div>
+                        <div class="stat-label">Snitt antal dagar per deal</div>
                     </div>
                 </div>
 
-                <h3>🎯 Vart Går Pengarna?</h3>
+                <h3>Fördelning per tjänst</h3>
                 <div id="service-breakdown"></div>
 
-                <h3>👥 Konsult-fördelning</h3>
+                <h3>Fördelning per konsult</h3>
                 <div id="consultant-breakdown"></div>
 
-                <h3>⚠️ Var Läcker Det?</h3>
+                <h3>Problem</h3>
                 <div id="leakage-analysis"></div>
 
-                <h3>💡 AI Rekommendationer</h3>
+                <h3>Förslag</h3>
                 <div id="strategic-recommendations"></div>
             </div>
         </div>
@@ -626,25 +669,25 @@
         <!-- RETRO VY -->
         <div id="retro-view" class="tab-content">
             <div class="section">
-                <h2>📚 Collective Learning</h2>
+                <h2> Collective Learning</h2>
                 
                 <div class="retro-section">
-                    <h3>🎉 Vunna Deals</h3>
+                    <h3>Vunna Deals</h3>
                     <div id="retro-wins"></div>
                 </div>
 
                 <div class="retro-section">
-                    <h3>😞 Förlorade Deals</h3>
+                    <h3> Förlorade Deals</h3>
                     <div id="retro-losses"></div>
                 </div>
 
                 <div class="retro-section">
-                    <h3>📖 Lärdomar</h3>
+                    <h3> Lärdomar</h3>
                     <div id="retro-learnings"></div>
                 </div>
 
                 <div class="retro-section">
-                    <h3>🎯 Nästa Månad - Fokus På</h3>
+                    <h3> Nästa Månad - Fokus På</h3>
                     <div id="retro-focus"></div>
                 </div>
             </div>
@@ -673,7 +716,7 @@
                             <span id="ai-fill-text">Fyll i fält med AI</span>
                         </button>
                         <button class="secondary-btn" onclick="startVoiceInput()" id="voice-btn">
-                            <span id="voice-btn-text">🎤 Tala in</span>
+                            <span id="voice-btn-text"> Tala in</span>
                         </button>
                         <button class="secondary-btn" onclick="clearAIInput()">
                             Rensa
@@ -699,11 +742,16 @@
                             <label>Stage *</label>
                             <select id="stage" required>
                                 <option value="">Välj stage...</option>
-                                <option value="Tut!">Tut!</option>
-                                <option value="Skarpt läge">Skarpt läge</option>
-                                <option value="Skriver/skickat offert">Skriver/skickat offert</option>
-                                <option value="Kundsnack">Kundsnack</option>
-                                <option value="Tappat uppdrag">Tappat uppdrag</option>
+                                <option value="Prospekt - Kall">Prospekt - Kall</option>
+                                <option value="Prospekt - Varm">Prospekt - Varm</option>
+                                <option value="Första kontakt">Första kontakt</option>
+                                <option value="Möte bokat">Möte bokat</option>
+                                <option value="Behovskartläggning">Behovskartläggning</option>
+                                <option value="Offert">Offert</option>
+                                <option value="Förhandling">Förhandling</option>
+                                <option value="Pågående uppdrag">Pågående uppdrag</option>
+                                <option value="Vunnen">Vunnen</option>
+                                <option value="Förlorad">Förlorad</option>
                             </select>
                         </div>
                         <div>
@@ -723,13 +771,37 @@
                             <input type="text" id="owner" required placeholder="t.ex. Emma">
                         </div>
                         <div>
+                            <label>KAM (Key Account Manager)</label>
+                            <input type="text" id="kam" placeholder="Vem är ansvarig för relationen långsiktigt?">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
                             <label>Typ av Uppdrag</label>
                             <input type="text" id="service" placeholder="t.ex. Ledarutveckling, OneBrand, Coaching">
+                        </div>
+                        <div>
+                            <label>Kundtyp</label>
+                            <select id="customer-type">
+                                <option value="">Välj...</option>
+                                <option value="Enterprise">Enterprise (stor kund)</option>
+                                <option value="Mid-market">Mid-market (mellanstora)</option>
+                                <option value="SMB">SMB (små företag)</option>
+                                <option value="Okänd">Okänd</option>
+                            </select>
                         </div>
                     </div>
 
                     <label>Kontaktperson</label>
                     <input type="text" id="contact" placeholder="Namn och titel">
+
+                    <div style="margin: 15px 0;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="existing-customer">
+                            <span>Befintlig kund (har jobbat med oss tidigare)</span>
+                        </label>
+                    </div>
 
                     <label>Senaste Aktivitet</label>
                     <input type="date" id="last-activity">
@@ -742,6 +814,9 @@
 
                     <label>Problem/Behov (från kund)</label>
                     <textarea id="problem" placeholder="Vad är kundens utmaning? Vad vill de åstadkomma?"></textarea>
+
+                    <label>Lärdomar</label>
+                    <textarea id="learnings" placeholder="Vad har vi lärt oss i denna affär? Vad funkar/funkar inte?"></textarea>
 
                     <label>Övrigt</label>
                     <textarea id="other" placeholder="Annan information som inte passar i övriga fält"></textarea>
@@ -760,9 +835,14 @@
                 <p style="color: #6b7280; margin-bottom: 15px; font-size: 0.95em;">
                     Ladda upp er säljpipe CSV-fil från Slack. Systemet mappar automatiskt kolumnerna.
                 </p>
-                <button class="primary-btn" onclick="document.getElementById('csv-file').click()">
-                    Importera CSV
-                </button>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button class="primary-btn" onclick="document.getElementById('csv-file').click()">
+                        Importera CSV
+                    </button>
+                    <button class="secondary-btn" onclick="downloadCSVTemplate()">
+                        Ladda ner CSV-mall
+                    </button>
+                </div>
                 <input type="file" id="csv-file" class="hidden" accept=".csv" onchange="importCSV(event)">
                 
                 <div id="csv-preview" class="hidden" style="margin-top: 20px; padding: 20px; background: #f9fafb; border-radius: 8px;">
@@ -824,16 +904,16 @@
                 recognition.onresult = function(event) {
                     const transcript = event.results[0][0].transcript;
                     document.getElementById('ai-input').value += (document.getElementById('ai-input').value ? ' ' : '') + transcript;
-                    document.getElementById('voice-btn-text').textContent = '🎤 Tala in';
+                    document.getElementById('voice-btn-text').textContent = ' Tala in';
                 };
                 
                 recognition.onerror = function(event) {
                     alert('Röstinspelning misslyckades: ' + event.error);
-                    document.getElementById('voice-btn-text').textContent = '🎤 Tala in';
+                    document.getElementById('voice-btn-text').textContent = ' Tala in';
                 };
                 
                 recognition.onend = function() {
-                    document.getElementById('voice-btn-text').textContent = '🎤 Tala in';
+                    document.getElementById('voice-btn-text').textContent = ' Tala in';
                 };
             }
         }
@@ -847,7 +927,7 @@
                 return;
             }
             
-            document.getElementById('voice-btn-text').textContent = '🔴 Lyssnar...';
+            document.getElementById('voice-btn-text').textContent = ' Lyssnar...';
             recognition.start();
         }
 
@@ -1058,8 +1138,12 @@
                 stage: document.getElementById('stage').value,
                 confidence: confidenceValue ? parseInt(confidenceValue) : null,
                 owner: document.getElementById('owner').value,
+                kam: document.getElementById('kam').value,
+                customerType: document.getElementById('customer-type').value,
                 service: document.getElementById('service').value,
                 contact: document.getElementById('contact').value,
+                existingCustomer: document.getElementById('existing-customer').checked,
+                learnings: document.getElementById('learnings').value,
                 lastActivity: document.getElementById('last-activity').value || new Date().toISOString().split('T')[0],
                 nextStep: document.getElementById('next-step').value,
                 comment: document.getElementById('comment').value,
@@ -1092,12 +1176,35 @@
 
         // Tab switching
         function showTab(tabName) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            // Ta bort active från alla flikar och innehåll
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
             
-            event.target.classList.add('active');
-            document.getElementById(tabName + '-view').classList.add('active');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
             
+            // Hitta och aktivera rätt flik baserat på tabName
+            const tabMap = {
+                'pipeline': 0,
+                'team': 1,
+                'kunder': 2,
+                'konsult': 3,
+                'ledning': 4,
+                'input': 5
+            };
+            
+            const tabIndex = tabMap[tabName];
+            if (tabIndex !== undefined && tabs[tabIndex]) {
+                tabs[tabIndex].classList.add('active');
+            }
+            
+            // Visa rätt innehåll
+            const viewElement = document.getElementById(tabName + '-view');
+            if (viewElement) {
+                viewElement.classList.add('active');
+            }
+            
+            // Uppdatera vyer
             updateAllViews();
         }
 
@@ -1150,18 +1257,23 @@
         // Get stage badge class
         function getStageBadgeClass(stage) {
             const map = {
-                'Tut!': 'stage-tut',
-                'Skarpt läge': 'stage-sharp',
-                'Kundsnack': 'stage-talk',
-                'Skriver/skickat offert': 'stage-offer',
-                'Tappat uppdrag': 'stage-lost'
+                'Prospekt - Kall': 'stage-cold',
+                'Prospekt - Varm': 'stage-warm',
+                'Första kontakt': 'stage-contact',
+                'Möte bokat': 'stage-meeting',
+                'Behovskartläggning': 'stage-needs',
+                'Offert': 'stage-offer',
+                'Förhandling': 'stage-negotiation',
+                'Pågående uppdrag': 'stage-ongoing',
+                'Vunnen': 'stage-won',
+                'Förlorad': 'stage-lost'
             };
             return map[stage] || 'stage-talk';
         }
 
         // Calculate data quality for a deal
         function calculateDataQuality(deal) {
-            const fields = [
+            const requiredFields = [
                 deal.company,
                 deal.value > 0,
                 deal.stage,
@@ -1169,29 +1281,39 @@
                 deal.service,
                 deal.contact,
                 deal.nextStep,
-                deal.problem,
-                deal.comment
+                deal.problem
             ];
             
-            const filled = fields.filter(f => f && String(f).trim()).length;
-            const percentage = Math.round((filled / fields.length) * 100);
+            // KAM är required för befintliga kunder och Pågående uppdrag
+            if (deal.existingCustomer || deal.stage === 'Pågående uppdrag') {
+                requiredFields.push(deal.kam);
+            }
+            
+            const filled = requiredFields.filter(f => f && String(f).trim()).length;
+            const percentage = Math.round((filled / requiredFields.length) * 100);
+            
+            const missing = []
+                .concat(!deal.contact ? ['Kontaktperson'] : [])
+                .concat(!deal.nextStep ? ['Nästa steg'] : [])
+                .concat(!deal.value || deal.value === 0 ? ['Värde'] : [])
+                .concat(!deal.problem ? ['Problem/behov'] : [])
+                .concat(!deal.service ? ['Service'] : []);
+            
+            if ((deal.existingCustomer || deal.stage === 'Pågående uppdrag') && !deal.kam) {
+                missing.push('KAM');
+            }
             
             return {
                 percentage: percentage,
-                missing: []
-                    .concat(!deal.contact ? ['Kontaktperson'] : [])
-                    .concat(!deal.nextStep ? ['Nästa steg'] : [])
-                    .concat(!deal.value || deal.value === 0 ? ['Värde'] : [])
-                    .concat(!deal.problem ? ['Problem/behov'] : [])
-                    .concat(!deal.service ? ['Service'] : [])
+                missing: missing
             };
         }
 
         // Render deal card
         function renderDealCard(deal) {
             const days = daysSince(deal.lastActivity);
-            const isStale = days > 30;
-            const isHot = deal.stage === 'Tut!' || deal.stage === 'Skarpt läge';
+            const isStale = days > 21;
+            const isHot = deal.stage === 'Offert' || deal.stage === 'Förhandling' || deal.stage === 'Pågående uppdrag';
             
             const quality = calculateDataQuality(deal);
             
@@ -1232,6 +1354,22 @@
                 </div>`;
             }
             
+            // AI Insights rendering
+            let aiInsightsHtml = '';
+            if (aiInsights.length > 0) {
+                aiInsightsHtml = `
+                    <div style="margin-top: 10px; padding: 10px; background: #eff6ff; border-radius: 6px;">
+                        <strong>AI Insights:</strong>
+                        ${aiInsights.map(insight => `
+                            <div style="margin-top: 5px; padding: 5px; font-size: 0.9em;">
+                                <strong>${insight.title}</strong><br>
+                                ${insight.text}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
             return `
                 <div class="${cardClass}">
                     ${qualityIndicator}
@@ -1240,11 +1378,13 @@
                             <div class="deal-title">${deal.company}</div>
                             <span class="badge ${getStageBadgeClass(deal.stage)}">${deal.stage}</span>
                             ${confidenceBadge}
+                            ${deal.existingCustomer ? '<span class="badge" style="background: #d1fae5; color: #065f46; margin-left: 8px;">Befintlig kund</span>' : ''}
                         </div>
                         <div class="deal-value">${formatCurrency(deal.value)}</div>
                     </div>
                     <div class="deal-meta">
                         <div class="meta-item">Owner: ${deal.owner}</div>
+                        ${deal.kam ? `<div class="meta-item">KAM: ${deal.kam}</div>` : ''}
                         <div class="meta-item">Service: ${deal.service || '—'}</div>
                         <div class="meta-item">Senaste: ${days} dagar sedan</div>
                         ${deal.contact ? `<div class="meta-item">Kontakt: ${deal.contact}</div>` : ''}
@@ -1267,35 +1407,74 @@
             const days = daysSince(deal.lastActivity);
             const insights = [];
             
+            // KAM missing för aktiva kunder
+            if (!deal.kam && (deal.stage === 'Pågående uppdrag' || deal.stage === 'Offert' || deal.stage === 'Förhandling' || deal.existingCustomer)) {
+                insights.push({
+                    type: 'warning',
+                    title: 'Saknar KAM',
+                    text: 'Tilldela Key Account Manager för långsiktig kundrelation'
+                });
+            }
+            
             // Stale deal warning
-            if (days > 60 && deal.stage !== 'Tappat uppdrag') {
-                insights.push(`
-                    <h4>VARNING: Ingen aktivitet</h4>
-                    <p>Ingen aktivitet på ${days} dagar. Deals i ${deal.stage} med >60 dagars inaktivitet har historiskt 80% risk att dö.</p>
-                    <p><strong>Förslag:</strong> Boka uppföljningsmöte NU. Anledning att höra av dig: "Q1 planning" eller "Vill stämma av timeline"</p>
-                `);
+            if (days > 21 && deal.stage !== 'Förlorad' && deal.stage !== 'Vunnen') {
+                insights.push({
+                    type: 'critical',
+                    title: `${days} dagar utan aktivitet`,
+                    text: 'Risk att dealen dör. Boka uppföljningsmöte NU.'
+                });
             }
             
             // Next step missing
-            if (!deal.nextStep && deal.stage !== 'Tappat uppdrag') {
-                insights.push(`
-                    <h4>AI Förslag</h4>
-                    <p>Ingen nästa steg planerat. Deals utan tydlig next action stannar ofta av.</p>
-                    <p><strong>Rekommendation:</strong> Boka konkret nästa möte eller aktivitet.</p>
-                `);
+            if (!deal.nextStep && deal.stage !== 'Förlorad' && deal.stage !== 'Vunnen') {
+                insights.push({
+                    type: 'warning',
+                    title: 'Saknar nästa steg',
+                    text: 'Deals utan tydlig next action stannar ofta av.'
+                });
             }
             
-            // Hot deal suggestions
-            if (deal.stage === 'Tut!' || deal.stage === 'Skarpt läge') {
-                insights.push(`
-                    <h4>Hot Deal - Success Tips</h4>
-                    <p>Baserat på liknande deals:</p>
-                    <ul style="margin-left: 20px; margin-top: 10px;">
-                        <li>Visa relevanta case från liknande kunder</li>
-                        <li>Föreslå pilot-approach om de tveker</li>
-                        <li>Boka uppföljning inom 5 dagar efter pitch</li>
-                    </ul>
-                `);
+            // Offert follow-up
+            if (deal.stage === 'Offert' && days > 7) {
+                insights.push({
+                    type: 'action',
+                    title: 'Offert >7 dagar',
+                    text: 'Följ upp beslut. Fråga: "Vad behöver ni för att gå vidare?"'
+                });
+            }
+            
+            // Behovskartläggning utan värde
+            if (deal.stage === 'Behovskartläggning' && !deal.value) {
+                insights.push({
+                    type: 'action',
+                    title: 'Uppskatta deal-värde',
+                    text: 'Viktigt för att prioritera och allokera resurser rätt.'
+                });
+            }
+            
+            // Kvartalsfas för befintliga kunder
+            if ((deal.stage === 'Pågående uppdrag' || deal.existingCustomer) && deal.created) {
+                const monthsSince = Math.floor(daysSince(deal.created) / 30);
+                if (monthsSince > 0 && monthsSince % 3 === 0) {
+                    insights.push({
+                        type: 'opportunity',
+                        title: 'Q-fas - Merförsäljning',
+                        text: `${monthsSince / 3} kvartal sedan start. Tid att diskutera expansion.`
+                    });
+                }
+            }
+            
+            // Prospekt → Första kontakt tips
+            if (deal.stage === 'Första kontakt' && days < 3) {
+                insights.push({
+                    type: 'tip',
+                    title: 'Nytt prospekt',
+                    text: 'Fokus: Förstå behov, inte sälja. Ställ öppna frågor.'
+                });
+            }
+            
+            return insights;
+        }
             }
             
             return insights.length > 0 ? insights.join('') : null;
@@ -1318,10 +1497,11 @@
                 missingContact: document.getElementById('filter-missing-contact').checked,
                 missingNext: document.getElementById('filter-missing-next').checked,
                 missingValue: document.getElementById('filter-missing-value').checked,
-                missingProblem: document.getElementById('filter-missing-problem').checked,
+                missingKam: document.getElementById('filter-missing-kam').checked,
                 incomplete: document.getElementById('filter-incomplete').checked,
                 complete: document.getElementById('filter-complete').checked,
-                owner: document.getElementById('filter-owner').value
+                owner: document.getElementById('filter-owner').value,
+                stage: document.getElementById('filter-stage').value
             };
             
             updatePipelineView();
@@ -1332,10 +1512,11 @@
             document.getElementById('filter-missing-contact').checked = false;
             document.getElementById('filter-missing-next').checked = false;
             document.getElementById('filter-missing-value').checked = false;
-            document.getElementById('filter-missing-problem').checked = false;
+            document.getElementById('filter-missing-kam').checked = false;
             document.getElementById('filter-incomplete').checked = false;
             document.getElementById('filter-complete').checked = false;
             document.getElementById('filter-owner').value = '';
+            document.getElementById('filter-stage').value = '';
             
             applyFilters();
         }
@@ -1348,13 +1529,18 @@
                     return false;
                 }
                 
+                // Stage filter
+                if (activeFilters.stage && deal.stage !== activeFilters.stage) {
+                    return false;
+                }
+                
                 // Data quality filters
                 const quality = calculateDataQuality(deal);
                 
                 if (activeFilters.missingContact && deal.contact) return false;
                 if (activeFilters.missingNext && deal.nextStep) return false;
                 if (activeFilters.missingValue && deal.value > 0) return false;
-                if (activeFilters.missingProblem && deal.problem) return false;
+                if (activeFilters.missingKam && deal.kam) return false;
                 if (activeFilters.incomplete && quality.percentage >= 50) return false;
                 if (activeFilters.complete && quality.percentage < 80) return false;
                 
@@ -1364,7 +1550,7 @@
 
         // Update Pipeline View (HUVUDVY)
         function updatePipelineView() {
-            const activeDeals = deals.filter(d => d.stage !== 'Tappat uppdrag');
+            const activeDeals = deals.filter(d => d.stage !== 'Förlorad' && d.stage !== 'Vunnen');
             const allDeals = deals;
             
             // Populate owner filter dropdown
@@ -1394,75 +1580,46 @@
             document.getElementById('pipeline-avg-value').textContent = formatCurrency(avgValue);
             document.getElementById('pipeline-data-quality').textContent = avgQuality + '%';
             
-            // Group by stage and apply filters
-            const stages = {
-                'Tut!': filterDeals(allDeals.filter(d => d.stage === 'Tut!')),
-                'Skarpt läge': filterDeals(allDeals.filter(d => d.stage === 'Skarpt läge')),
-                'Skriver/skickat offert': filterDeals(allDeals.filter(d => d.stage === 'Skriver/skickat offert')),
-                'Kundsnack': filterDeals(allDeals.filter(d => d.stage === 'Kundsnack')),
-                'Tappat uppdrag': filterDeals(allDeals.filter(d => d.stage === 'Tappat uppdrag'))
-            };
+            // Apply filters and render all deals
+            const filteredDeals = filterDeals(allDeals);
+            const allDealsHtml = filteredDeals.length > 0
+                ? filteredDeals.map(renderDealCard).join('')
+                : allDeals.length > 0 
+                    ? '<div class="empty-state"><h3>Inga deals matchar filtret</h3><p>Justera eller rensa filter för att se deals.</p></div>'
+                    : '<div class="empty-state"><h3>Inga deals än</h3><p>Lägg till din första deal!</p></div>';
             
-            // Render each stage
-            const stageIds = ['tut', 'sharp', 'offer', 'talk', 'lost'];
-            const stageKeys = ['Tut!', 'Skarpt läge', 'Skriver/skickat offert', 'Kundsnack', 'Tappat uppdrag'];
-            
-            stageIds.forEach((id, index) => {
-                const stageDeals = stages[stageKeys[index]];
-                const container = document.getElementById('stage-' + id);
-                
-                if (stageDeals.length === 0) {
-                    const allInStage = allDeals.filter(d => d.stage === stageKeys[index]).length;
-                    if (allInStage > 0 && Object.values(activeFilters).some(v => v)) {
-                        container.innerHTML = '<div class="stage-empty">Inga deals matchar filtret</div>';
-                    } else {
-                        container.innerHTML = '<div class="stage-empty">Inga deals i detta stage</div>';
-                    }
-                } else {
-                    const totalStageValue = stageDeals.reduce((sum, d) => sum + d.value, 0);
-                    const header = `<div style="margin-bottom: 15px; color: #6b7280;">
-                        ${stageDeals.length} deals · ${formatCurrency(totalStageValue)}
-                    </div>`;
-                    container.innerHTML = header + stageDeals.map(renderDealCard).join('');
-                }
-            });
+            document.getElementById('all-deals').innerHTML = allDealsHtml;
         }
 
         // Update Team View
         function updateTeamView() {
-            const activeDeals = deals.filter(d => d.stage !== 'Tappat uppdrag');
-            const hotDeals = activeDeals.filter(d => d.stage === 'Tut!' || d.stage === 'Skarpt läge');
-            const staleDeals = activeDeals.filter(d => daysSince(d.lastActivity) > 30);
+            const activeDeals = deals.filter(d => d.stage !== 'Förlorad' && d.stage !== 'Vunnen');
+            const hotDeals = activeDeals.filter(d => d.stage === 'Offert' || d.stage === 'Förhandling' || d.stage === 'Pågående uppdrag');
+            const staleDeals = activeDeals.filter(d => daysSince(d.lastActivity) > 21);
             
             const totalValue = activeDeals.reduce((sum, d) => sum + d.value, 0);
             
             document.getElementById('team-total-value').textContent = formatCurrency(totalValue);
             document.getElementById('team-deal-count').textContent = activeDeals.length;
             document.getElementById('team-hot-count').textContent = hotDeals.length;
-            document.getElementById('team-stale-count').textContent = staleDeals.length;
+            document.getElementById('team-risk-count').textContent = staleDeals.length;
             
             // Hot deals
             const hotDealsHtml = hotDeals.length > 0 
                 ? hotDeals.map(renderDealCard).join('')
-                : '<div class="empty-state"><h3>Inga heta deals just nu</h3></div>';
+                : '<div class="empty-state"><h3>Inga skarpa lägen just nu</h3></div>';
             document.getElementById('hot-deals').innerHTML = hotDealsHtml;
             
             // Stale deals
             const staleDealsHtml = staleDeals.length > 0
                 ? staleDeals.map(renderDealCard).join('')
-                : '<div class="empty-state"><h3>Inga risk deals! 🎉</h3></div>';
+                : '<div class="empty-state"><h3>Inget står stilla!</h3></div>';
             document.getElementById('stale-deals').innerHTML = staleDealsHtml;
-            
-            // All deals
-            const allDealsHtml = activeDeals.length > 0
-                ? activeDeals.map(renderDealCard).join('')
-                : '<div class="empty-state"><h3>Inga deals än</h3><p>Lägg till din första deal!</p></div>';
-            document.getElementById('all-deals').innerHTML = allDealsHtml;
             
             // Network opportunities (placeholder)
             document.getElementById('network-opportunities').innerHTML = `
                 <div class="insight-box">
-                    <h4>💼 Network Intelligence</h4>
+                    <h4>Network Intelligence</h4>
                     <p><em>Ladda upp LinkedIn-kontakter för att se network opportunities</em></p>
                     <p style="margin-top: 10px;">När du laddar upp konsulters LinkedIn CSV kommer systemet automatiskt matcha mot aktiva deals och visa:</p>
                     <ul style="margin-left: 20px; margin-top: 10px;">
@@ -1472,6 +1629,85 @@
                     </ul>
                 </div>
             `;
+        }
+
+        // Update Kunder View
+        function updateKunderView() {
+            // Gruppera alla deals per företag för att se historik
+            const customerMap = {};
+            
+            deals.forEach(deal => {
+                if (!customerMap[deal.company]) {
+                    customerMap[deal.company] = {
+                        name: deal.company,
+                        deals: [],
+                        totalRevenue: 0,
+                        owners: new Set(),
+                        existingCustomer: deal.existingCustomer || false
+                    };
+                }
+                customerMap[deal.company].deals.push(deal);
+                customerMap[deal.company].totalRevenue += deal.value;
+                if (deal.owner) customerMap[deal.company].owners.add(deal.owner);
+            });
+            
+            const customers = Object.values(customerMap);
+            
+            // Filter - visa bara befintliga kunder ELLER kunder med flera deals
+            const existingCustomers = customers.filter(c => 
+                c.existingCustomer || c.deals.length > 1 || 
+                c.deals.some(d => d.stage === 'Vunnen' || d.existingCustomer)
+            );
+            
+            // Stats
+            document.getElementById('kunder-total').textContent = existingCustomers.length;
+            document.getElementById('kunder-revenue').textContent = formatCurrency(
+                existingCustomers.reduce((sum, c) => sum + c.totalRevenue, 0)
+            );
+            document.getElementById('kunder-avg').textContent = existingCustomers.length > 0
+                ? formatCurrency(existingCustomers.reduce((sum, c) => sum + c.totalRevenue, 0) / existingCustomers.length)
+                : '0 kr';
+            
+            // Lista kunder
+            const customerListHtml = existingCustomers.length > 0
+                ? existingCustomers
+                    .sort((a, b) => b.totalRevenue - a.totalRevenue)
+                    .map(customer => `
+                        <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 2px solid #e5e7eb;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                                <div>
+                                    <h3 style="margin: 0 0 5px 0;">${customer.name}</h3>
+                                    <div style="color: #6b7280; font-size: 0.9em;">
+                                        Ansvarig: ${Array.from(customer.owners).join(', ') || '—'}
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 1.5em; font-weight: 600; color: #2563eb;">
+                                        ${formatCurrency(customer.totalRevenue)}
+                                    </div>
+                                    <div style="color: #6b7280; font-size: 0.9em;">
+                                        ${customer.deals.length} deal${customer.deals.length > 1 ? 's' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 15px;">
+                                <strong>Historik:</strong>
+                                ${customer.deals.map(d => `
+                                    <div style="padding: 10px; background: #f9fafb; border-radius: 6px; margin-top: 8px;">
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>${d.service || 'Tjänst ej angiven'} - ${d.stage}</span>
+                                            <span style="font-weight: 600;">${formatCurrency(d.value)}</span>
+                                        </div>
+                                        ${d.learnings ? `<div style="margin-top: 5px; font-size: 0.9em; color: #6b7280;">Lärdom: ${d.learnings}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')
+                : '<div class="empty-state"><p>Inga befintliga kunder ännu. Markera deals som "Befintlig kund" för att se dem här.</p></div>';
+            
+            document.getElementById('customer-list').innerHTML = customerListHtml;
         }
 
         // Update Konsult View
@@ -1512,14 +1748,14 @@
                 const days = daysSince(deal.lastActivity);
                 if (days > 14 && !deal.nextStep) {
                     actions.push({
-                        icon: '⚠️',
+                        icon: 'RISK',
                         title: `Följ upp ${deal.company}`,
                         desc: `${days} dagar sen senaste aktivitet. Boka uppföljningsmöte.`
                     });
                 }
                 if (deal.stage === 'Tut!' || deal.stage === 'Skarpt läge') {
                     actions.push({
-                        icon: '🔥',
+                        icon: 'HOT',
                         title: `${deal.company} är hot!`,
                         desc: `Säkerställ att du har case och nästa steg klart.`
                     });
@@ -1536,14 +1772,14 @@
                         </div>
                     </li>
                 `).join('')
-                : '<li class="action-item"><span class="action-icon">✅</span><div class="action-content"><div class="action-title">Allt ser bra ut!</div><div class="action-desc">Inga kritiska actions idag.</div></div></li>';
+                : '<li class="action-item"><span class="action-icon">[OK]</span><div class="action-content"><div class="action-title">Allt ser bra ut!</div><div class="action-desc">Inga kritiska actions idag.</div></div></li>';
             
             document.getElementById('konsult-today').innerHTML = actionsHtml;
             
             // Network (placeholder)
             document.getElementById('konsult-network').innerHTML = `
                 <div class="insight-box">
-                    <h4>🌐 Ditt Nätverk</h4>
+                    <h4> Ditt Nätverk</h4>
                     <p><em>Ladda upp dina LinkedIn-kontakter för personliga network insights</em></p>
                 </div>
             `;
@@ -1602,11 +1838,11 @@
             
             const leakageHtml = `
                 <div class="insight-box warning">
-                    <h4>⚠️ ${staleDeals.length} deals utan aktivitet >60 dagar</h4>
+                    <h4>${staleDeals.length} deals utan aktivitet >60 dagar</h4>
                     <p>Värde i risk: ${formatCurrency(staleDeals.reduce((sum, d) => sum + d.value, 0))}</p>
                 </div>
                 <div class="insight-box warning">
-                    <h4>⚠️ ${noNextStep.length} deals utan planerat nästa steg</h4>
+                    <h4>${noNextStep.length} deals utan planerat nästa steg</h4>
                     <p>Deals utan next step dör ofta i tysthet.</p>
                 </div>
             `;
@@ -1710,6 +1946,7 @@
         function updateAllViews() {
             updatePipelineView();
             updateTeamView();
+            updateKunderView();
             updateKonsultView();
             updateLedningView();
             updateRetroView();
@@ -1742,6 +1979,20 @@
 
         // CSV Import/Export
         let pendingCSVDeals = [];
+
+        // Download CSV template
+        function downloadCSVTemplate() {
+            // Exakt samma struktur som er Slack säljpipe CSV
+            const template = `Kund;Kommentarer;Intäkt;2;Stage;Uppdrag (rubrik);Kontaktperson;Deal owner;Kommentar/status;Fakturerat per 2026
+Exempel AB;Kommentar här;500000;2;Kundsnack;Ledarutveckling;Anna Andersson;emma.forsgren@gmail.com;Första mötet bokat;
+Företag XYZ;Hett läge;1000000;3;Tut!;OneBrand;Per Persson;johanna3friman@gmail.com;Offert skickad;`;
+            
+            const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'saljpipe_mall.csv';
+            link.click();
+        }
 
         // Import CSV
         function importCSV(event) {
@@ -1895,11 +2146,13 @@
                     owner: '',
                     service: '',
                     contact: '',
-                    confidence: null, // 1=Möte, 2=Hett möte, 3=Bekräftad affär
+                    confidence: null,
                     problem: '',
                     nextStep: '',
                     comment: '',
                     other: '',
+                    existingCustomer: false, // Befintlig kund eller ny?
+                    learnings: '', // Vad lärde vi oss?
                     lastActivity: new Date().toISOString().split('T')[0],
                     created: new Date().toISOString()
                 };
@@ -1973,6 +2226,12 @@
                 alert('Kunde inte hitta några deals i CSV-filen.\n\nDebug info i console (tryck F12)');
             }
             return deals;
+            
+            } catch (error) {
+                console.error('Error parsing CSV:', error);
+                alert('Fel vid läsning av CSV: ' + error.message);
+                return [];
+            }
         }
 
         // Show CSV preview
