@@ -1773,17 +1773,33 @@
         // Parse CSV and map to our data structure
         function parseCSV(csv) {
             // Detect delimiter (comma or semicolon)
-            const firstLine = csv.split('\n')[0];
-            const delimiter = firstLine.includes(';') ? ';' : ',';
+            const allLines = csv.split('\n');
             
-            const lines = csv.split('\n').filter(line => line.trim());
-            if (lines.length < 2) return [];
+            // Find header row (skip title rows like "Säljpipe")
+            let headerIndex = 0;
+            for (let i = 0; i < Math.min(5, allLines.length); i++) {
+                const line = allLines[i].toLowerCase();
+                if (line.includes('kund') || line.includes('stage') || line.includes('company')) {
+                    headerIndex = i;
+                    break;
+                }
+            }
+            
+            const lines = allLines.slice(headerIndex).filter(line => line.trim());
+            if (lines.length < 2) {
+                console.error('No data rows found after header');
+                return [];
+            }
+            
+            const firstLine = lines[0];
+            const delimiter = firstLine.includes(';') ? ';' : ',';
             
             // Parse header
             const header = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
             
             console.log('CSV Header:', header);
             console.log('Using delimiter:', delimiter);
+            console.log('Header found at line:', headerIndex + 1);
             
             // Map column names to our fields (case-insensitive)
             const columnMap = {};
@@ -1794,8 +1810,9 @@
                 if (normalized.includes('kund') || normalized === 'company' || normalized === 'företag') {
                     columnMap[index] = 'company';
                 }
-                // Value - check for numeric column names too (like "40000")
-                else if (normalized.includes('intäkt') || normalized === 'value' || normalized === 'värde' || 
+                // Value - check for "Intäkt" column or numeric column names
+                else if (normalized === 'intäkt' || normalized.includes('intäkt') || 
+                         normalized === 'value' || normalized === 'värde' || 
                          normalized === 'deal-värde' || /^\d{5,}$/.test(normalized)) {
                     columnMap[index] = 'value';
                 }
