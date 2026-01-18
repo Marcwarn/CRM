@@ -707,13 +707,26 @@
                             </select>
                         </div>
                         <div>
-                            <label>Deal Owner *</label>
-                            <input type="text" id="owner" required placeholder="t.ex. Emma">
+                            <label>Mognadsgrad</label>
+                            <select id="confidence">
+                                <option value="">Välj...</option>
+                                <option value="1">1 - Möte</option>
+                                <option value="2">2 - Hett möte</option>
+                                <option value="3">3 - Bekräftad affär</option>
+                            </select>
                         </div>
                     </div>
 
-                    <label>Typ av Uppdrag</label>
-                    <input type="text" id="service" placeholder="t.ex. Ledarutveckling, OneBrand, Coaching">
+                    <div class="form-row">
+                        <div>
+                            <label>Deal Owner *</label>
+                            <input type="text" id="owner" required placeholder="t.ex. Emma">
+                        </div>
+                        <div>
+                            <label>Typ av Uppdrag</label>
+                            <input type="text" id="service" placeholder="t.ex. Ledarutveckling, OneBrand, Coaching">
+                        </div>
+                    </div>
 
                     <label>Kontaktperson</label>
                     <input type="text" id="contact" placeholder="Namn och titel">
@@ -764,6 +777,12 @@
                 <h3 style="margin-top: 30px; margin-bottom: 15px;">Exportera/Backup</h3>
                 <button class="secondary-btn" onclick="exportData()">Exportera Data (JSON)</button>
                 <button class="secondary-btn" onclick="exportCSV()">Exportera som CSV</button>
+                
+                <h3 style="margin-top: 30px; margin-bottom: 15px;">Radera Data</h3>
+                <p style="color: #6b7280; margin-bottom: 15px; font-size: 0.95em;">
+                    Radera all data från systemet. Detta kan inte ångras!
+                </p>
+                <button class="danger-btn" onclick="deleteAllData()">Radera all data</button>
                 
                 <h3 style="margin-top: 30px; margin-bottom: 15px;">Testdata</h3>
                 <button class="secondary-btn" onclick="document.getElementById('import-file').click()">Importera JSON</button>
@@ -1030,11 +1049,14 @@
         function saveDeal(event) {
             event.preventDefault();
             
+            const confidenceValue = document.getElementById('confidence').value;
+            
             const deal = {
                 id: Date.now(),
                 company: document.getElementById('company').value,
                 value: parseInt(document.getElementById('value').value) || 0,
                 stage: document.getElementById('stage').value,
+                confidence: confidenceValue ? parseInt(confidenceValue) : null,
                 owner: document.getElementById('owner').value,
                 service: document.getElementById('service').value,
                 contact: document.getElementById('contact').value,
@@ -1177,6 +1199,19 @@
             if (isHot) cardClass += ' hot';
             else if (isStale) cardClass += ' stale';
             
+            // Confidence badge
+            let confidenceBadge = '';
+            if (deal.confidence) {
+                const confLabels = {
+                    1: 'Möte',
+                    2: 'Hett möte',
+                    3: 'Bekräftad affär'
+                };
+                confidenceBadge = `<span class="badge" style="background: #dbeafe; color: #1e40af; margin-left: 8px;">
+                    ${confLabels[deal.confidence]}
+                </span>`;
+            }
+            
             const aiInsights = generateAIInsights(deal);
             
             // Data quality indicator
@@ -1204,6 +1239,7 @@
                         <div>
                             <div class="deal-title">${deal.company}</div>
                             <span class="badge ${getStageBadgeClass(deal.stage)}">${deal.stage}</span>
+                            ${confidenceBadge}
                         </div>
                         <div class="deal-value">${formatCurrency(deal.value)}</div>
                     </div>
@@ -1758,9 +1794,14 @@
                 if (normalized.includes('kund') || normalized === 'company' || normalized === 'företag') {
                     columnMap[index] = 'company';
                 }
-                // Value
-                else if (normalized.includes('intäkt') || normalized === 'value' || normalized === 'värde' || normalized === 'deal-värde') {
+                // Value - check for numeric column names too (like "40000")
+                else if (normalized.includes('intäkt') || normalized === 'value' || normalized === 'värde' || 
+                         normalized === 'deal-värde' || /^\d{5,}$/.test(normalized)) {
                     columnMap[index] = 'value';
+                }
+                // Confidence/Maturity level - single digit numbers (1, 2, 3)
+                else if (/^[123]$/.test(normalized)) {
+                    columnMap[index] = 'confidence';
                 }
                 // Stage
                 else if (normalized === 'stage' || normalized.includes('steg')) {
@@ -1810,13 +1851,14 @@
                 values.push(current.trim());
                 
                 const deal = {
-                    id: Date.now() + i,
+                    id: Date.now() + i + Math.random() * 1000,
                     company: '',
                     value: 0,
                     stage: 'Kundsnack',
                     owner: '',
                     service: '',
                     contact: '',
+                    confidence: null, // 1=Möte, 2=Hett möte, 3=Bekräftad affär
                     problem: '',
                     nextStep: '',
                     comment: '',
@@ -1835,28 +1877,57 @@
                     if (mappedField === 'company') {
                         deal.company = value;
                     } else if (mappedField === 'value') {
-                        // Parse value - could be "2-3 mkr", "180 000", etc
-                        const valueMatch = value.match(/(\d+(?:[,\s]\d+)?)/);
-                        if (valueMatch) {
-                            let numValue = valueMatch[1].replace(/[\s,]/g, '');
-                            if (value.toLowerCase().includes('mkr') || value.toLowerCase().includes('miljon')) {
-                                deal.value = parseInt(numValue) * 1000000;
-                            } else if (value.toLowerCase().includes('k') && !value.toLowerCase().includes('kr')) {
-                                deal.value = parseInt(numValue) * 1000;
-                            } else {
-                                deal.value = parseInt(numValue);
+                        // Parse value - handle various formats
+                        // "2-3 mkr" → take first number = 2 000 000
+                        // "10 000" → 10 000
+                        // "180 000" → 180 000
+                        // "100-300 000" → 100 000 (take lowest in range)
+                        // "720 000 under 8 mån" → 720 000 (ignore text after number)
+                        
+                        let cleanValue = value.toLowerCase();
+                        let numValue = 0;
+                        
+                        // Check for range pattern (e.g. "100-300", "2-3 mkr")
+                        const rangeMatch = cleanValue.match(/(\d+)\s*-\s*(\d+)/);
+                        if (rangeMatch) {
+                            // Take the first (lowest) number in range
+                            numValue = parseInt(rangeMatch[1]);
+                        } else {
+                            // Extract first number with spaces (e.g. "180 000" or "720 000 under...")
+                            const numberMatch = cleanValue.match(/(\d+(?:\s+\d+)*)/);
+                            if (numberMatch) {
+                                numValue = parseInt(numberMatch[1].replace(/\s/g, ''));
                             }
+                        }
+                        
+                        if (numValue > 0) {
+                            // Check for multipliers
+                            if (cleanValue.includes('mkr') || cleanValue.includes('miljon')) {
+                                numValue = numValue * 1000000;
+                            } else if (cleanValue.includes('k') && !cleanValue.includes('kr')) {
+                                numValue = numValue * 1000;
+                            }
+                            
+                            deal.value = numValue;
                         }
                     } else if (mappedField === 'stage') {
                         deal.stage = value;
+                    } else if (mappedField === 'confidence') {
+                        // Parse confidence level (1, 2, 3)
+                        const conf = parseInt(value);
+                        if (conf >= 1 && conf <= 3) {
+                            deal.confidence = conf;
+                        }
                     } else if (mappedField === 'owner') {
                         // Extract email or name
                         const emailMatch = value.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
                         if (emailMatch) {
                             const email = emailMatch[1];
                             // Extract name from email (part before @)
-                            deal.owner = email.split('@')[0].split('.')[0];
-                            deal.owner = deal.owner.charAt(0).toUpperCase() + deal.owner.slice(1);
+                            const namePart = email.split('@')[0];
+                            // Handle formats like "emma.forsgren" → "Emma"
+                            const firstName = namePart.split('.')[0];
+                            deal.owner = firstName.charAt(0).toUpperCase() + firstName.slice(1);
                         } else {
                             deal.owner = value;
                         }
@@ -1866,7 +1937,7 @@
                         deal.contact = value;
                     } else if (mappedField === 'comment') {
                         deal.comment = value;
-                    } else if (!mappedField && header[j]) {
+                    } else if (!mappedField && header[j] && value) {
                         // Unknown column -> add to "other"
                         if (deal.other) deal.other += '\n';
                         deal.other += `${header[j]}: ${value}`;
@@ -1880,6 +1951,9 @@
             }
             
             console.log('Parsed deals:', deals.length);
+            if (deals.length > 0) {
+                console.log('First deal:', deals[0]);
+            }
             return deals;
         }
 
@@ -1998,6 +2072,37 @@
                 return '"' + str.replace(/"/g, '""') + '"';
             }
             return str;
+        }
+
+        // Delete all data
+        function deleteAllData() {
+            const confirmed = confirm(
+                'VARNING: Detta raderar ALL data från systemet.\n\n' +
+                'Alla deals, kommentarer och inställningar försvinner permanent.\n\n' +
+                'Vill du fortsätta?'
+            );
+            
+            if (!confirmed) return;
+            
+            const doubleCheck = confirm(
+                'Är du HELT säker?\n\n' +
+                'Detta kan INTE ångras!\n\n' +
+                'Klicka OK för att radera all data.'
+            );
+            
+            if (!doubleCheck) return;
+            
+            // Clear all data
+            deals = [];
+            saveData();
+            
+            // Clear filters
+            clearFilters();
+            
+            // Update all views
+            updateAllViews();
+            
+            alert('All data raderad!');
         }
 
         // Import data
