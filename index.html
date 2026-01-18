@@ -1736,36 +1736,55 @@
 
         // Parse CSV and map to our data structure
         function parseCSV(csv) {
+            // Detect delimiter (comma or semicolon)
+            const firstLine = csv.split('\n')[0];
+            const delimiter = firstLine.includes(';') ? ';' : ',';
+            
             const lines = csv.split('\n').filter(line => line.trim());
             if (lines.length < 2) return [];
             
             // Parse header
-            const header = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const header = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
             
-            // Map column names to our fields
-            const columnMap = {
-                'Kund': 'company',
-                'company': 'company',
-                'företag': 'company',
-                '40000': 'value',
-                'värde': 'value',
-                'value': 'value',
-                'deal-värde': 'value',
-                'Stage': 'stage',
-                'stage': 'stage',
-                'Uppdrag (rubrik)': 'service',
-                'service': 'service',
-                'typ av uppdrag': 'service',
-                'Kontaktperson': 'contact',
-                'kontakt': 'contact',
-                'contact': 'contact',
-                'Deal owner': 'owner',
-                'owner': 'owner',
-                'ägare': 'owner',
-                'Kommentar/status': 'comment',
-                'kommentar': 'comment',
-                'status': 'comment'
-            };
+            console.log('CSV Header:', header);
+            console.log('Using delimiter:', delimiter);
+            
+            // Map column names to our fields (case-insensitive)
+            const columnMap = {};
+            header.forEach((col, index) => {
+                const normalized = col.toLowerCase().trim();
+                
+                // Company
+                if (normalized.includes('kund') || normalized === 'company' || normalized === 'företag') {
+                    columnMap[index] = 'company';
+                }
+                // Value
+                else if (normalized.includes('intäkt') || normalized === 'value' || normalized === 'värde' || normalized === 'deal-värde') {
+                    columnMap[index] = 'value';
+                }
+                // Stage
+                else if (normalized === 'stage' || normalized.includes('steg')) {
+                    columnMap[index] = 'stage';
+                }
+                // Service
+                else if (normalized.includes('uppdrag') || normalized === 'service' || normalized === 'typ av uppdrag') {
+                    columnMap[index] = 'service';
+                }
+                // Contact
+                else if (normalized.includes('kontaktperson') || normalized === 'kontakt' || normalized === 'contact') {
+                    columnMap[index] = 'contact';
+                }
+                // Owner
+                else if (normalized.includes('deal owner') || normalized === 'owner' || normalized === 'ägare') {
+                    columnMap[index] = 'owner';
+                }
+                // Comment/Status
+                else if (normalized.includes('kommentar') || normalized.includes('status')) {
+                    columnMap[index] = 'comment';
+                }
+            });
+            
+            console.log('Column mapping:', columnMap);
             
             const deals = [];
             
@@ -1781,7 +1800,7 @@
                 for (let char of line) {
                     if (char === '"') {
                         inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
+                    } else if (char === delimiter && !inQuotes) {
                         values.push(current.trim());
                         current = '';
                     } else {
@@ -1806,14 +1825,12 @@
                     created: new Date().toISOString()
                 };
                 
-                // Map values
-                for (let j = 0; j < header.length && j < values.length; j++) {
-                    const colName = header[j];
+                // Map values using column mapping
+                for (let j = 0; j < values.length; j++) {
                     const value = values[j].replace(/^"|"$/g, '').trim();
-                    
                     if (!value) continue;
                     
-                    const mappedField = columnMap[colName];
+                    const mappedField = columnMap[j];
                     
                     if (mappedField === 'company') {
                         deal.company = value;
@@ -1824,7 +1841,7 @@
                             let numValue = valueMatch[1].replace(/[\s,]/g, '');
                             if (value.toLowerCase().includes('mkr') || value.toLowerCase().includes('miljon')) {
                                 deal.value = parseInt(numValue) * 1000000;
-                            } else if (value.toLowerCase().includes('k') || value.toLowerCase().includes('tusen')) {
+                            } else if (value.toLowerCase().includes('k') && !value.toLowerCase().includes('kr')) {
                                 deal.value = parseInt(numValue) * 1000;
                             } else {
                                 deal.value = parseInt(numValue);
@@ -1833,17 +1850,26 @@
                     } else if (mappedField === 'stage') {
                         deal.stage = value;
                     } else if (mappedField === 'owner') {
-                        deal.owner = value;
+                        // Extract email or name
+                        const emailMatch = value.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                        if (emailMatch) {
+                            const email = emailMatch[1];
+                            // Extract name from email (part before @)
+                            deal.owner = email.split('@')[0].split('.')[0];
+                            deal.owner = deal.owner.charAt(0).toUpperCase() + deal.owner.slice(1);
+                        } else {
+                            deal.owner = value;
+                        }
                     } else if (mappedField === 'service') {
                         deal.service = value;
                     } else if (mappedField === 'contact') {
                         deal.contact = value;
                     } else if (mappedField === 'comment') {
                         deal.comment = value;
-                    } else {
+                    } else if (!mappedField && header[j]) {
                         // Unknown column -> add to "other"
                         if (deal.other) deal.other += '\n';
-                        deal.other += `${colName}: ${value}`;
+                        deal.other += `${header[j]}: ${value}`;
                     }
                 }
                 
@@ -1853,6 +1879,7 @@
                 }
             }
             
+            console.log('Parsed deals:', deals.length);
             return deals;
         }
 
