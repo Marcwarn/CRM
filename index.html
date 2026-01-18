@@ -451,8 +451,46 @@
                     <div class="stat-label">Genomsnitt per Deal</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="pipeline-expected">0 kr</div>
-                    <div class="stat-label">Förväntat att Stänga</div>
+                    <div class="stat-value" id="pipeline-data-quality">0%</div>
+                    <div class="stat-label">Data Quality</div>
+                </div>
+            </div>
+
+            <!-- FILTERS -->
+            <div class="section" style="background: white; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">Filtrera Pipeline</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="filter-missing-contact" onchange="applyFilters()">
+                        Saknar kontaktperson
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="filter-missing-next" onchange="applyFilters()">
+                        Saknar nästa steg
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="filter-missing-value" onchange="applyFilters()">
+                        Saknar värde
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="filter-missing-problem" onchange="applyFilters()">
+                        Saknar problem/behov
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="filter-incomplete" onchange="applyFilters()">
+                        Ofullständig data (under 50%)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="filter-complete" onchange="applyFilters()">
+                        Komplett data (över 80%)
+                    </label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <label>Filtrera på konsult:</label>
+                    <select id="filter-owner" onchange="applyFilters()" style="margin-left: 10px; padding: 8px;">
+                        <option value="">Alla</option>
+                    </select>
+                    <button class="secondary-btn" onclick="clearFilters()" style="margin-left: 10px;">Rensa filter</button>
                 </div>
             </div>
 
@@ -1099,11 +1137,41 @@
             return map[stage] || 'stage-talk';
         }
 
+        // Calculate data quality for a deal
+        function calculateDataQuality(deal) {
+            const fields = [
+                deal.company,
+                deal.value > 0,
+                deal.stage,
+                deal.owner,
+                deal.service,
+                deal.contact,
+                deal.nextStep,
+                deal.problem,
+                deal.comment
+            ];
+            
+            const filled = fields.filter(f => f && String(f).trim()).length;
+            const percentage = Math.round((filled / fields.length) * 100);
+            
+            return {
+                percentage: percentage,
+                missing: []
+                    .concat(!deal.contact ? ['Kontaktperson'] : [])
+                    .concat(!deal.nextStep ? ['Nästa steg'] : [])
+                    .concat(!deal.value || deal.value === 0 ? ['Värde'] : [])
+                    .concat(!deal.problem ? ['Problem/behov'] : [])
+                    .concat(!deal.service ? ['Service'] : [])
+            };
+        }
+
         // Render deal card
         function renderDealCard(deal) {
             const days = daysSince(deal.lastActivity);
             const isStale = days > 30;
             const isHot = deal.stage === 'Tut!' || deal.stage === 'Skarpt läge';
+            
+            const quality = calculateDataQuality(deal);
             
             let cardClass = 'deal-card';
             if (isHot) cardClass += ' hot';
@@ -1111,8 +1179,27 @@
             
             const aiInsights = generateAIInsights(deal);
             
+            // Data quality indicator
+            let qualityIndicator = '';
+            if (quality.percentage < 50) {
+                qualityIndicator = `<div style="padding: 10px; background: #fee2e2; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #ef4444;">
+                    <strong>Data Quality: ${quality.percentage}% - Kritiskt ofullständig</strong><br>
+                    Saknas: ${quality.missing.join(', ')}
+                </div>`;
+            } else if (quality.percentage < 80) {
+                qualityIndicator = `<div style="padding: 10px; background: #fef3c7; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #f59e0b;">
+                    <strong>Data Quality: ${quality.percentage}% - Kan förbättras</strong><br>
+                    Saknas: ${quality.missing.join(', ')}
+                </div>`;
+            } else if (quality.missing.length > 0) {
+                qualityIndicator = `<div style="padding: 8px; background: #f3f4f6; border-radius: 6px; margin-bottom: 10px; font-size: 0.9em;">
+                    Data Quality: ${quality.percentage}% ${quality.missing.length > 0 ? `(saknas: ${quality.missing.join(', ')})` : ''}
+                </div>`;
+            }
+            
             return `
                 <div class="${cardClass}">
+                    ${qualityIndicator}
                     <div class="deal-header">
                         <div>
                             <div class="deal-title">${deal.company}</div>
@@ -1178,31 +1265,106 @@
             return insights.length > 0 ? insights.join('') : null;
         }
 
+        // Filters
+        let activeFilters = {
+            missingContact: false,
+            missingNext: false,
+            missingValue: false,
+            missingProblem: false,
+            incomplete: false,
+            complete: false,
+            owner: ''
+        };
+
+        // Apply filters
+        function applyFilters() {
+            activeFilters = {
+                missingContact: document.getElementById('filter-missing-contact').checked,
+                missingNext: document.getElementById('filter-missing-next').checked,
+                missingValue: document.getElementById('filter-missing-value').checked,
+                missingProblem: document.getElementById('filter-missing-problem').checked,
+                incomplete: document.getElementById('filter-incomplete').checked,
+                complete: document.getElementById('filter-complete').checked,
+                owner: document.getElementById('filter-owner').value
+            };
+            
+            updatePipelineView();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('filter-missing-contact').checked = false;
+            document.getElementById('filter-missing-next').checked = false;
+            document.getElementById('filter-missing-value').checked = false;
+            document.getElementById('filter-missing-problem').checked = false;
+            document.getElementById('filter-incomplete').checked = false;
+            document.getElementById('filter-complete').checked = false;
+            document.getElementById('filter-owner').value = '';
+            
+            applyFilters();
+        }
+
+        // Filter deals based on active filters
+        function filterDeals(deals) {
+            return deals.filter(deal => {
+                // Owner filter
+                if (activeFilters.owner && deal.owner !== activeFilters.owner) {
+                    return false;
+                }
+                
+                // Data quality filters
+                const quality = calculateDataQuality(deal);
+                
+                if (activeFilters.missingContact && deal.contact) return false;
+                if (activeFilters.missingNext && deal.nextStep) return false;
+                if (activeFilters.missingValue && deal.value > 0) return false;
+                if (activeFilters.missingProblem && deal.problem) return false;
+                if (activeFilters.incomplete && quality.percentage >= 50) return false;
+                if (activeFilters.complete && quality.percentage < 80) return false;
+                
+                return true;
+            });
+        }
+
         // Update Pipeline View (HUVUDVY)
         function updatePipelineView() {
             const activeDeals = deals.filter(d => d.stage !== 'Tappat uppdrag');
             const allDeals = deals;
             
+            // Populate owner filter dropdown
+            const ownerSelect = document.getElementById('filter-owner');
+            const currentOwner = ownerSelect.value;
+            const owners = [...new Set(deals.map(d => d.owner))].sort();
+            ownerSelect.innerHTML = '<option value="">Alla</option>';
+            owners.forEach(owner => {
+                const opt = document.createElement('option');
+                opt.value = owner;
+                opt.textContent = owner;
+                if (owner === currentOwner) opt.selected = true;
+                ownerSelect.appendChild(opt);
+            });
+            
+            // Calculate overall data quality
+            const avgQuality = activeDeals.length > 0
+                ? Math.round(activeDeals.reduce((sum, d) => sum + calculateDataQuality(d).percentage, 0) / activeDeals.length)
+                : 0;
+            
             // Stats
             const totalValue = activeDeals.reduce((sum, d) => sum + d.value, 0);
             const avgValue = activeDeals.length > 0 ? totalValue / activeDeals.length : 0;
             
-            // Expected to close (Tut! + Skarpt läge med 60% probability)
-            const hotDeals = activeDeals.filter(d => d.stage === 'Tut!' || d.stage === 'Skarpt läge');
-            const expected = hotDeals.reduce((sum, d) => sum + d.value, 0) * 0.6;
-            
             document.getElementById('pipeline-total-value').textContent = formatCurrency(totalValue);
             document.getElementById('pipeline-deal-count').textContent = activeDeals.length;
             document.getElementById('pipeline-avg-value').textContent = formatCurrency(avgValue);
-            document.getElementById('pipeline-expected').textContent = formatCurrency(expected);
+            document.getElementById('pipeline-data-quality').textContent = avgQuality + '%';
             
-            // Group by stage
+            // Group by stage and apply filters
             const stages = {
-                'Tut!': allDeals.filter(d => d.stage === 'Tut!'),
-                'Skarpt läge': allDeals.filter(d => d.stage === 'Skarpt läge'),
-                'Skriver/skickat offert': allDeals.filter(d => d.stage === 'Skriver/skickat offert'),
-                'Kundsnack': allDeals.filter(d => d.stage === 'Kundsnack'),
-                'Tappat uppdrag': allDeals.filter(d => d.stage === 'Tappat uppdrag')
+                'Tut!': filterDeals(allDeals.filter(d => d.stage === 'Tut!')),
+                'Skarpt läge': filterDeals(allDeals.filter(d => d.stage === 'Skarpt läge')),
+                'Skriver/skickat offert': filterDeals(allDeals.filter(d => d.stage === 'Skriver/skickat offert')),
+                'Kundsnack': filterDeals(allDeals.filter(d => d.stage === 'Kundsnack')),
+                'Tappat uppdrag': filterDeals(allDeals.filter(d => d.stage === 'Tappat uppdrag'))
             };
             
             // Render each stage
@@ -1214,7 +1376,12 @@
                 const container = document.getElementById('stage-' + id);
                 
                 if (stageDeals.length === 0) {
-                    container.innerHTML = '<div class="stage-empty">Inga deals i detta stage</div>';
+                    const allInStage = allDeals.filter(d => d.stage === stageKeys[index]).length;
+                    if (allInStage > 0 && Object.values(activeFilters).some(v => v)) {
+                        container.innerHTML = '<div class="stage-empty">Inga deals matchar filtret</div>';
+                    } else {
+                        container.innerHTML = '<div class="stage-empty">Inga deals i detta stage</div>';
+                    }
                 } else {
                     const totalStageValue = stageDeals.reduce((sum, d) => sum + d.value, 0);
                     const header = `<div style="margin-bottom: 15px; color: #6b7280;">
